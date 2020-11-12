@@ -1,7 +1,7 @@
 import csv  # 系统内置模块
 
 import time
-
+import socket
 import urllib.request as request
 import threading
 import multiprocessing
@@ -36,43 +36,57 @@ def mkdir(path):
 with open('q2w.csv') as fileRead:
     f_csv = csv.reader(fileRead)
     result = list(f_csv)
-    # print(f_csv[0])
-    # code = ''
-    # count = 0
-    # for row in f_csv:
-    #     print(row)
-    #     ss = 'D:/wwwww/' + row[2]
-    #     mkdir(ss)
-    #     if code != row[2]:
-    #         request.urlretrieve(row[0], 'D:/wwwww/' + row[2] + '/门头像_' + str(count) + '.jpg')
-    #         request.urlretrieve(row[1], 'D:/wwwww/' + row[2] + '/身份证正面照_' + str(count) + '.jpg')
-    #         count = 0
-    #     else:
-    #         request.urlretrieve(row[0], 'D:/wwwww/' + row[2] + '/门头像_' + str(count) + '.jpg')
-    #         request.urlretrieve(row[1], 'D:/wwwww/' + row[2] + '/身份证正面照_' + str(count) + '.jpg')
-    #         count += 1
 
 
 def test(xx, y, q):  # Use thread.start_new_thread() to create 2 new threads
     for count in range(y, q):
         row = xx[count]
-        print(row)
-        ss = 'D:/wwwww/' + row[2]
+        ss = 'E:/wwwww/' + row[2]
         mkdir(ss)
-        request.urlretrieve(row[0], 'D:/wwwww/' + row[2] + '/门头像_' + row[3] + '.jpg')
-        if row[1] != 's':
-            request.urlretrieve(row[1], 'D:/wwwww/' + row[2] + '/身份证正面照_' + row[3] + '.jpg')
+        try:
+            request.urlretrieve(row[0] + '?x-oss-process=image/resize,h_200,w_450/quality,Q_60',
+                                ss + '/门头像_' + row[3] + '.png')
+        except socket.timeout:
+            count = 1
+            while count <= 5:
+                try:
+                    request.urlretrieve(row[0] + '?x-oss-process=image/resize,h_200,w_450/quality,Q_60',
+                                        ss + '/门头像_' + row[3] + '.png')
+                    break
+                except socket.timeout:
+                    err_info = 'Reloading for %d time' % count if count == 1 else 'Reloading for %d times' % count
+                    print(err_info)
+                    count += 1
+            if count > 5:
+                print("downloading picture fialed!")
+        try:
+            if row[1] is not None:
+                request.urlretrieve(row[1] + '?x-oss-process=image/resize,h_200,w_450/quality,Q_60',
+                                    ss + '/身份证正面照_' + row[3] + '.png')
+        except socket.timeout:
+            size = 1
+            while size <= 5:
+                try:
+                    request.urlretrieve(row[1] + '?x-oss-process=image/resize,h_200,w_450/quality,Q_60',
+                                        ss + '/身份证正面照_' + row[3] + '.png')
+                    break
+                except socket.timeout:
+                    err_info = 'Reloading for %d time' % count if count == 1 else 'Reloading for %d times' % count
+                    print(err_info)
+                    size += 1
+            if size > 5:
+                print("downloading picture fialed!")
 
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
-    p = multiprocessing.Pool(20, maxtasksperchild=100)
-    for i in range(1, 101):
+    p = multiprocessing.Pool(20)
+    for i in range(1, 21):
         if i == 1:
             star = 0
         else:
-            star = (i - 1) * 4000
-        p.apply_async(test, args=(result, star, i * 4000))
+            star = (i - 1) * 20000
+        p.apply_async(test, args=(result, star, i * 20000))
     p.close()
     p.join()
     print("所有进程执行完毕")
