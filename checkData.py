@@ -4,12 +4,25 @@ import time
 import socket
 import urllib.request as request
 import threading
+from logging import getLogger, INFO
+from concurrent_log_handler import ConcurrentRotatingFileHandler
+import os
+
 import multiprocessing
+
+socket.setdefaulttimeout(60)
+
+log = getLogger()
+# Use an absolute path to prevent file rotation trouble.
+logfile = os.path.abspath("wo.log")
+# Rotate log after reaching 512K, keep 5 old copies.
+rotateHandler = ConcurrentRotatingFileHandler(logfile, "a", 512 * 1024, 5)
+log.addHandler(rotateHandler)
+log.setLevel(INFO)
 
 
 def mkdir(path):
-    # 引入模块
-    import os
+
     # 去除首位空格
     path = path.strip()
     # 去除尾部 \ 符号
@@ -25,6 +38,8 @@ def mkdir(path):
         os.makedirs(path)
         # print (path + ' 创建成功')
         return True
+    else:
+        return False
 
 
 # 将远程数据下载到本地，第二个参数就是要保存到本地的文件名
@@ -37,56 +52,71 @@ with open('q2w.csv') as fileRead:
     f_csv = csv.reader(fileRead)
     result = list(f_csv)
 
+error1 = []
+
 
 def test(xx, y, q):  # Use thread.start_new_thread() to create 2 new threads
+    if q > 350000:
+        q = 350823
+    print(str(y) + '-' + str(q - 1))
     for count in range(y, q):
         row = xx[count]
-        ss = 'E:/wwwww/' + row[2]
-        mkdir(ss)
-        try:
-            request.urlretrieve(row[0] + '?x-oss-process=image/resize,h_200,w_450/quality,Q_60',
-                                ss + '/门头像_' + row[3] + '.png')
-        except socket.timeout:
-            count = 1
-            while count <= 5:
-                try:
+        ss = 'D:/eeeee/' + row[2]
+        if mkdir(ss):
+            reul = ''
+            try:
+                # 去除首位空格
+                path = ss + '/门头像_' + row[3] + '.png'.strip()
+                # 去除尾部 \ 符号
+                path = path.rstrip("\\")
+                # 判断路径是否存在
+                # 存在     True
+                # 不存在   False
+                isExistsz = os.path.exists(path)
+                if not isExistsz:
                     request.urlretrieve(row[0] + '?x-oss-process=image/resize,h_200,w_450/quality,Q_60',
                                         ss + '/门头像_' + row[3] + '.png')
-                    break
-                except socket.timeout:
-                    err_info = 'Reloading for %d time' % count if count == 1 else 'Reloading for %d times' % count
-                    print(err_info)
-                    count += 1
-            if count > 5:
-                print("downloading picture fialed!")
-        try:
-            if row[1] is not None:
-                request.urlretrieve(row[1] + '?x-oss-process=image/resize,h_200,w_450/quality,Q_60',
-                                    ss + '/身份证正面照_' + row[3] + '.png')
-        except socket.timeout:
-            size = 1
-            while size <= 5:
-                try:
-                    request.urlretrieve(row[1] + '?x-oss-process=image/resize,h_200,w_450/quality,Q_60',
-                                        ss + '/身份证正面照_' + row[3] + '.png')
-                    break
-                except socket.timeout:
-                    err_info = 'Reloading for %d time' % count if count == 1 else 'Reloading for %d times' % count
-                    print(err_info)
-                    size += 1
-            if size > 5:
-                print("downloading picture fialed!")
+                reul += ','
+            except Exception as e:
+                print("m")
+                reul += str(row[0]) + ","
+                print(e)
+            try:
+                # 去除首位空格
+                path2 = ss + '/身份证正面照_' + row[3] + '.png'.strip()
+                # 去除尾部 \ 符号
+                path3 = path2.rstrip("\\")
+                # 判断路径是否存在
+                # 存在     True
+                # 不存在   False
+                isExistszs = os.path.exists(path3)
+                if not isExistszs:
+                    if row[1] is not None and row[1] != '':
+                        request.urlretrieve(row[1] + '?x-oss-process=image/resize,h_200,w_450/quality,Q_60',
+                                            ss + '/身份证正面照_' + row[3] + '.png')
+                reul += ','
+            except Exception as e:
+                print("f" + str(row[1]))
+                reul += str(row[1]) + ','
+                print(e)
+            if reul[0] is not ',':
+                reul += str(row[2])
+                log.info(reul)
 
+
+
+
+# 350822
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
-    p = multiprocessing.Pool(20)
-    for i in range(1, 21):
+    p = multiprocessing.Pool(40)
+    for i in range(1, 37):
         if i == 1:
             star = 0
         else:
-            star = (i - 1) * 20000
-        p.apply_async(test, args=(result, star, i * 20000))
+            star = (i - 1) * 10000
+        p.apply_async(test, args=(result, star, i * 10000))
     p.close()
     p.join()
     print("所有进程执行完毕")
