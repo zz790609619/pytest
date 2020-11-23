@@ -7,7 +7,7 @@ import os
 
 import multiprocessing
 
-socket.setdefaulttimeout(60)
+socket.setdefaulttimeout(120)
 
 log = getLogger()
 # Use an absolute path to prevent file rotation trouble.
@@ -48,16 +48,16 @@ with open('q2w.csv') as fileRead:
 
 
 def test(xx, y, q):  # Use thread.start_new_thread() to create 2 new threads
-    if q > 350000:
+    if q == 350000:
         q = 350823
     print(str(y) + '-' + str(q - 1))
     for count in range(y, q):
         row = xx[count]
-        ss = 'D:/eeeee/' + row[2]
+        ss = 'D:/zzzzz/' + row[2]
         if mkdir(ss):
             reul = ''
             try:
-                request.urlretrieve(row[0] + '?x-oss-process=image/resize,h_200,w_450/quality,Q_60',
+                request.urlretrieve(row[0],
                                     ss + '/门头像_' + row[3] + '.png')
                 reul += ','
             except Exception as e:
@@ -66,7 +66,7 @@ def test(xx, y, q):  # Use thread.start_new_thread() to create 2 new threads
                 print(e)
             try:
                 if row[1] is not None and row[1] != '':
-                    request.urlretrieve(row[1] + '?x-oss-process=image/resize,h_200,w_450/quality,Q_60',
+                    request.urlretrieve(row[1],
                                         ss + '/身份证正面照_' + row[3] + '.png')
                 reul += ','
             except Exception as e:
@@ -82,13 +82,13 @@ def test(xx, y, q):  # Use thread.start_new_thread() to create 2 new threads
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
-    p = multiprocessing.Pool(40)
-    for i in range(1, 37):
+    p = multiprocessing.Pool(10)
+    for i in range(1, 11):
         if i == 1:
             star = 0
         else:
-            star = (i - 1) * 10000
-        p.apply_async(test, args=(result, star, i * 10000))
+            star = (i - 1) * 35000
+        p.apply_async(test, args=(result, star, i * 35000))
     p.close()
     p.join()
     print("所有进程执行完毕")
