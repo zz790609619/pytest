@@ -1,9 +1,6 @@
 import csv  # 系统内置模块
-
-import time
 import socket
 import urllib.request as request
-import threading
 from logging import getLogger, INFO
 from concurrent_log_handler import ConcurrentRotatingFileHandler
 import os
@@ -22,7 +19,6 @@ log.setLevel(INFO)
 
 
 def mkdir(path):
-
     # 去除首位空格
     path = path.strip()
     # 去除尾部 \ 符号
@@ -30,9 +26,7 @@ def mkdir(path):
     # 判断路径是否存在
     # 存在     True
     # 不存在   False
-    isExists = os.path.exists(path)
-    # 判断结果
-    if not isExists:
+    if not os.path.exists(path):
         # 如果不存在则创建目录
         # 创建目录操作函数
         os.makedirs(path)
@@ -52,8 +46,6 @@ with open('q2w.csv') as fileRead:
     f_csv = csv.reader(fileRead)
     result = list(f_csv)
 
-error1 = []
-
 
 def test(xx, y, q):  # Use thread.start_new_thread() to create 2 new threads
     if q > 350000:
@@ -65,35 +57,17 @@ def test(xx, y, q):  # Use thread.start_new_thread() to create 2 new threads
         if mkdir(ss):
             reul = ''
             try:
-                # 去除首位空格
-                path = ss + '/门头像_' + row[3] + '.png'.strip()
-                # 去除尾部 \ 符号
-                path = path.rstrip("\\")
-                # 判断路径是否存在
-                # 存在     True
-                # 不存在   False
-                isExistsz = os.path.exists(path)
-                if not isExistsz:
-                    request.urlretrieve(row[0] + '?x-oss-process=image/resize,h_200,w_450/quality,Q_60',
-                                        ss + '/门头像_' + row[3] + '.png')
+                request.urlretrieve(row[0] + '?x-oss-process=image/resize,h_200,w_450/quality,Q_60',
+                                    ss + '/门头像_' + row[3] + '.png')
                 reul += ','
             except Exception as e:
                 print("m")
                 reul += str(row[0]) + ","
                 print(e)
             try:
-                # 去除首位空格
-                path2 = ss + '/身份证正面照_' + row[3] + '.png'.strip()
-                # 去除尾部 \ 符号
-                path3 = path2.rstrip("\\")
-                # 判断路径是否存在
-                # 存在     True
-                # 不存在   False
-                isExistszs = os.path.exists(path3)
-                if not isExistszs:
-                    if row[1] is not None and row[1] != '':
-                        request.urlretrieve(row[1] + '?x-oss-process=image/resize,h_200,w_450/quality,Q_60',
-                                            ss + '/身份证正面照_' + row[3] + '.png')
+                if row[1] is not None and row[1] != '':
+                    request.urlretrieve(row[1] + '?x-oss-process=image/resize,h_200,w_450/quality,Q_60',
+                                        ss + '/身份证正面照_' + row[3] + '.png')
                 reul += ','
             except Exception as e:
                 print("f" + str(row[1]))
@@ -102,8 +76,6 @@ def test(xx, y, q):  # Use thread.start_new_thread() to create 2 new threads
             if reul[0] is not ',':
                 reul += str(row[2])
                 log.info(reul)
-
-
 
 
 # 350822

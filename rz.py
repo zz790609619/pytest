@@ -1,12 +1,6 @@
-import urllib.request as request
-from io import BytesIO
+import re
 
-strs = ''
-strs += '1'
-sa = ['1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1']
-for s in range(15, 30):
-    print(sa[s])
-# if strs.('1'):
-#     print()
-print(strs[0])
-print(strs.count('1'))
+z = 'helosamqw213e1+2sad/m+'
+r = re.search(r'(h.*w)([0-9]+e1)(\+.*\+)', z)
+print(r.group(3))
+
